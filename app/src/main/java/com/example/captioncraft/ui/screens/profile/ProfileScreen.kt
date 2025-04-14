@@ -1,5 +1,6 @@
 package com.example.captioncraft.ui.screens.profile
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -18,10 +19,16 @@ import coil.compose.AsyncImage
 import com.example.captioncraft.R
 import com.example.captioncraft.data.models.Post
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Settings
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import com.example.captioncraft.ui.Screen
 
 @Composable
 fun ProfileScreen(
-    viewModel: ProfileViewModel = hiltViewModel()
+    viewModel: ProfileViewModel = hiltViewModel(),
+    navController: NavHostController
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val userPosts by viewModel.userPosts.collectAsState()
@@ -29,60 +36,107 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
-        // Profile Header
+        Spacer(modifier = Modifier.height(16.dp))
+
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Profile Image Placeholder
+            Text(
+                text = currentUser?.username ?: "Username",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Row {
+                IconButton(onClick = { viewModel.navigateToSettings(navController) }) {
+                    Icon(Icons.Default.Settings, contentDescription = "Settings")
+                }
+                IconButton(onClick = { viewModel.logout(navController) }) {
+                    Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Surface(
                 modifier = Modifier.size(80.dp),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 currentUser?.avatarUrl?.let { url ->
                     AsyncImage(
                         model = url,
-                        contentDescription = null,
+                        contentDescription = "Profile Picture",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
             }
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column {
                 Text(
-                    text = currentUser?.username ?: "",
+                    text = currentUser?.username ?: "Username",
                     style = MaterialTheme.typography.titleLarge
                 )
-                IconButton(
-                    onClick = { viewModel.logout() }
-                ) {
-                    Icon(
-                        Icons.Default.ExitToApp,
-                        contentDescription = stringResource(R.string.logout)
-                    )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+                    ProfileStat("Posts", userPosts.size)
+                    ProfileStat("Followers", currentUser?.followers?.size ?: 0)
+                    ProfileStat("Following", currentUser?.following?.size ?: 0)
                 }
             }
         }
 
-        // Posts Grid
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { /* TODO: Navigate to Edit Profile */ },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) {
+            Icon(Icons.Default.Edit, contentDescription = "Edit")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Edit Profile")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "My Posts",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
+            modifier = Modifier.fillMaxSize(),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             items(userPosts) { post ->
-                PostThumbnail(post = post)
+                PostThumbnail(post)
             }
         }
+    }
+}
+
+
+@Composable
+fun ProfileStat(label: String, count: Int) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = count.toString(), style = MaterialTheme.typography.bodyLarge)
+        Text(text = label, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -96,9 +150,9 @@ fun PostThumbnail(post: Post) {
     ) {
         AsyncImage(
             model = post.imageUrl,
-            contentDescription = null,
+            contentDescription = "Post Thumbnail",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
     }
-} 
+}
