@@ -14,7 +14,9 @@ import com.example.captioncraft.domain.model.UserSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -105,7 +107,7 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun searchUsers(query: String): Flow<List<User>> = flow {
+    fun searchUsers(query: String): Flow<List<User>> = flow {
         try {
             val remote = userApi.searchUsers(query).map { it.toDomain() }
             val local = userDao.searchUsersOnce(query).map { it.toDomain() }
