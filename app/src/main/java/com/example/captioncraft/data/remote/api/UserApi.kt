@@ -18,10 +18,10 @@ interface UserApi {
     @GET("users")
     suspend fun getAllUsers(): List<UserDto>
 
-    @POST("users/register")
+    @POST("register")
     suspend fun register(@Body request: RegisterDto): UserDto
 
-    @POST("users/login")
+    @POST("login")
     suspend fun authenticate(@Body request: RegisterDto): UserDto
 
     @GET("users/search")

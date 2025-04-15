@@ -1,5 +1,6 @@
 package com.example.captioncraft.data.repository
 
+import android.util.Log
 import com.bumptech.glide.util.ExceptionPassthroughInputStream
 import com.example.captioncraft.data.local.dao.SettingsDao
 import com.example.captioncraft.data.local.dao.UserDao
@@ -32,7 +33,7 @@ class UserRepository @Inject constructor(
 
     suspend fun login(username: String, password: String): Result<User?> {
         try {
-            val apiUser = userApi.authenticate(RegisterDto(username, password)).toDomain()
+            val apiUser = userApi.authenticate(RegisterDto(username, "", password)).toDomain()
             val localUser = userDao.getUserById(apiUser.id)?.toDomain()
 
             if (localUser != apiUser) {
@@ -50,9 +51,9 @@ class UserRepository @Inject constructor(
         _currentUser.value = null
     }
 
-    suspend fun register(username: String, password: String) : Result<User?> {
+    suspend fun register(username: String, name: String, password: String) : Result<User?> {
         try {
-            val apiUser = userApi.register(RegisterDto(username, password)).toDomain()
+            val apiUser = userApi.register(RegisterDto(username, name, password)).toDomain()
             val localUser = userDao.getUserById(apiUser.id)?.toDomain()
 
             if (localUser != apiUser) {
@@ -62,6 +63,7 @@ class UserRepository @Inject constructor(
             _currentUser.value = apiUser
             return Result.success(_currentUser.value)
         } catch (e: Exception) {
+            Log.e("Network", "Error: ${e.localizedMessage}", e)
             return Result.failure(e)
         }
     }

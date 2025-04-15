@@ -27,6 +27,9 @@ class LoginViewModel @Inject constructor(
     var password by mutableStateOf("")
         private set
 
+    var name by mutableStateOf("")
+        private set
+
     private val _loginStatus = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val loginStatus: StateFlow<LoginUiState> = _loginStatus.asStateFlow()
 
@@ -39,6 +42,10 @@ class LoginViewModel @Inject constructor(
 
     fun onPasswordChanged(newValue: String) {
         password = newValue
+    }
+
+    fun onNameChanged(newValue: String) {
+        name = newValue
     }
 
     fun login() {
@@ -59,7 +66,7 @@ class LoginViewModel @Inject constructor(
 
     fun register() {
         viewModelScope.launch {
-            val response = userRepository.register(username, password)
+            val response = userRepository.register(username, name, password)
             if (response.isSuccess) {
                 _registerResult.value = LoginUiState.Success
             } else {

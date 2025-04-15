@@ -38,6 +38,7 @@ fun LoginScreen(
 ) {
     val username = viewModel.username
     val password = viewModel.password
+    val name = viewModel.name
     val loginStatus by viewModel.loginStatus.collectAsState()
     val registerResult by viewModel.registerResult.collectAsState()
 
@@ -76,6 +77,16 @@ fun LoginScreen(
         )
 
         OutlinedTextField(
+            value = name,
+            onValueChange = viewModel::onNameChanged,
+            label = { Text(stringResource(id = R.string.name)) },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        )
+
+        OutlinedTextField(
             value = username,
             onValueChange = viewModel::onUsernameChanged,
             label = { Text(stringResource(id = R.string.username)) },
@@ -95,6 +106,10 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
         )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+
 
         Spacer(modifier = Modifier.height(24.dp))
 
