@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,9 +41,8 @@ fun LoginScreen(
     val password = viewModel.password
     val name = viewModel.name
     val loginStatus by viewModel.loginStatus.collectAsState()
-    val registerResult by viewModel.registerResult.collectAsState()
 
-    LaunchedEffect(loginStatus) {
+    LaunchedEffect (loginStatus) {
         if (loginStatus == LoginUiState.Success) {
             navController.navigate(Screen.Feed.route) {
                 popUpTo(navController.graph.findStartDestination().id) {
@@ -50,14 +50,6 @@ fun LoginScreen(
                 }
                 launchSingleTop = true
                 restoreState = true
-            }
-        }
-    }
-
-    LaunchedEffect(registerResult) {
-        if (registerResult == LoginUiState.Success) {
-            navController.navigate(Screen.Feed.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
             }
         }
     }

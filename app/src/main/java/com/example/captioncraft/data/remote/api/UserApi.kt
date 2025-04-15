@@ -1,6 +1,7 @@
 package com.example.captioncraft.data.remote.api
 
 import com.example.captioncraft.data.remote.dto.RegisterDto
+import com.example.captioncraft.data.remote.dto.ResponseDto
 import com.example.captioncraft.data.remote.dto.UserDto
 import retrofit2.http.*
 
@@ -19,7 +20,7 @@ interface UserApi {
     suspend fun getAllUsers(): List<UserDto>
 
     @POST("register")
-    suspend fun register(@Body request: RegisterDto): UserDto
+    suspend fun register(@Body request: RegisterDto): ResponseDto
 
     @POST("login")
     suspend fun authenticate(@Body request: RegisterDto): UserDto

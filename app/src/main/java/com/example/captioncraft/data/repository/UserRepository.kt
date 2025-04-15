@@ -12,6 +12,7 @@ import com.example.captioncraft.domain.mapper.toDto
 import com.example.captioncraft.domain.mapper.toEntity
 import com.example.captioncraft.domain.model.User
 import com.example.captioncraft.domain.model.UserSettings
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class UserRepository @Inject constructor(
@@ -32,19 +34,23 @@ class UserRepository @Inject constructor(
     val currentUser: StateFlow<User?> = _currentUser
 
     suspend fun login(username: String, password: String): Result<User?> {
-        try {
-            val apiUser = userApi.authenticate(RegisterDto(username, "", password)).toDomain()
-            val localUser = userDao.getUserById(apiUser.id)?.toDomain()
+        return withContext(Dispatchers.IO) {
+            try {
+                val apiUser = userApi.authenticate(RegisterDto(username = username, password = password)).toDomain()
+                val localUser = userDao.getUserById(apiUser.id)?.toDomain()
 
-            if (localUser != apiUser) {
+                if (localUser != apiUser) {
                     userDao.insertUser(apiUser.toEntity())
+                }
+                Log.d("User", "User: ${apiUser.name}")
+                _currentUser.value = apiUser
+                return@withContext Result.success(_currentUser.value)
+            } catch (e: Exception) {
+                Log.e("Network", "Error: ${e.localizedMessage}", e)
+                return@withContext Result.failure(e)
             }
-
-            _currentUser.value = apiUser
-            return Result.success(_currentUser.value)
-        } catch (e: Exception) {
-            return Result.failure(e)
         }
+
     }
 
     fun logout() {
@@ -52,19 +58,14 @@ class UserRepository @Inject constructor(
     }
 
     suspend fun register(username: String, name: String, password: String) : Result<User?> {
-        try {
-            val apiUser = userApi.register(RegisterDto(username, name, password)).toDomain()
-            val localUser = userDao.getUserById(apiUser.id)?.toDomain()
-
-            if (localUser != apiUser) {
-                userDao.insertUser(apiUser.toEntity())
+        return withContext(Dispatchers.IO) {
+            try {
+                userApi.register(RegisterDto(username, name, password))
+                return@withContext Result.success(_currentUser.value)
+            } catch (e: Exception) {
+                Log.e("Network", "Error: ${e.localizedMessage}", e)
+                return@withContext Result.failure(e)
             }
-
-            _currentUser.value = apiUser
-            return Result.success(_currentUser.value)
-        } catch (e: Exception) {
-            Log.e("Network", "Error: ${e.localizedMessage}", e)
-            return Result.failure(e)
         }
     }
 

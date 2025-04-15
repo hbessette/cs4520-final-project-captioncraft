@@ -1,4 +1,5 @@
 package com.example.captioncraft.ui.screens.settings
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.captioncraft.data.repository.UserRepository
@@ -41,6 +42,10 @@ class SettingsViewModel @Inject constructor(
     fun toggleDarkMode(enabled: Boolean) {
         _isDarkMode.value = enabled
         update()
+        AppCompatDelegate.setDefaultNightMode(
+            if(enabled) AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+        )
     }
 
     fun toggleNotifications(enabled: Boolean) {
