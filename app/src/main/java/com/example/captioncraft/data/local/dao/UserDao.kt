@@ -14,19 +14,16 @@ interface UserDao {
     @Query("SELECT * FROM User WHERE id = :id")
     fun getUserById(id: Int): UserEntity?
 
-    @Query("SELECT * FROM User WHERE username = :username")
-    fun getUserByUsername(username: String): Flow<UserEntity?>
-
-    @Query("SELECT * FROM User")
-    fun getAllUsers(): Flow<List<UserEntity>>
-
     @Update
     suspend fun updateUser(user: UserEntity)
 
-    @Delete
-    suspend fun deleteUser(user: UserEntity)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUsers(users: List<UserEntity>)
 
-    @Query("SELECT * FROM User WHERE username = :username AND password = :password LIMIT 1")
-    suspend fun authenticate(username: String, password: String): User?
+    @Query("SELECT * FROM User WHERE username LIKE '%' || :query || '%' OR name LIKE '%' || :query || '%'")
+    fun searchUsers(query: String): Flow<List<UserEntity>>
+
+    @Query("SELECT * FROM User WHERE username LIKE '%' || :query || '%' OR name LIKE '%' || :query || '%'")
+    suspend fun searchUsersOnce(query: String): List<UserEntity>
 
 }
