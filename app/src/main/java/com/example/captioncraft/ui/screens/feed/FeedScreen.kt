@@ -16,14 +16,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.captioncraft.R
-import com.example.captioncraft.data.models.Post
-import com.example.captioncraft.data.models.Caption
+import com.example.captioncraft.data.local.entity.CaptionEntity
+import com.example.captioncraft.domain.model.Post
 
 @Composable
 fun FeedScreen(
     viewModel: FeedViewModel = hiltViewModel()
 ) {
-    val posts by viewModel.posts.collectAsState()
+    val posts by viewModel.feedPosts.collectAsState()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -121,7 +121,7 @@ fun PostCard(
 
 @Composable
 fun CaptionItem(
-    caption: Caption,
+    caption: CaptionEntity,
     onLike: () -> Unit
 ) {
     Row(
@@ -148,18 +148,3 @@ fun CaptionItem(
         }
     }
 }
-
-// This is a placeholder data class - we'll implement the actual data model later
-data class Post(
-    val id: String,
-    val imageUrl: String,
-    val captions: List<Caption>,
-    val userId: String
-)
-
-data class Caption(
-    val id: String,
-    val text: String,
-    val likes: Int,
-    val userId: String
-) 

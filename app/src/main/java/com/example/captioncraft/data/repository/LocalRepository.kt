@@ -1,8 +1,8 @@
 package com.example.captioncraft.data.repository
 
-import com.example.captioncraft.data.models.Caption
-import com.example.captioncraft.data.models.Post
-import com.example.captioncraft.data.models.User
+import com.example.captioncraft.data.local.entity.CaptionEntity
+import com.example.captioncraft.data.local.entity.PostEntity
+import com.example.captioncraft.data.local.entity.UserEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,17 +13,17 @@ import javax.inject.Singleton
 
 @Singleton
 class LocalRepository @Inject constructor() {
-    private val _currentUser = MutableStateFlow<User?>(null)
-    val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
+    private val _currentUser = MutableStateFlow<UserEntity?>(null)
+    val currentUser: StateFlow<UserEntity?> = _currentUser.asStateFlow()
 
-    private val _users = MutableStateFlow<List<User>>(emptyList())
-    val users: StateFlow<List<User>> = _users.asStateFlow()
+    private val _users = MutableStateFlow<List<UserEntity>>(emptyList())
+    val users: StateFlow<List<UserEntity>> = _users.asStateFlow()
 
-    private val _posts = MutableStateFlow<List<Post>>(emptyList())
-    val posts: StateFlow<List<Post>> = _posts.asStateFlow()
+    private val _posts = MutableStateFlow<List<PostEntity>>(emptyList())
+    val posts: StateFlow<List<PostEntity>> = _posts.asStateFlow()
 
     fun login(username: String) {
-        val user = User(
+        val user = UserEntity(
             id = UUID.randomUUID().toString(),
             username = username
         )
@@ -43,7 +43,7 @@ class LocalRepository @Inject constructor() {
 
     fun createPost(imageUrl: String) {
         val currentUser = _currentUser.value ?: return
-        val post = Post(
+        val post = PostEntity(
             id = UUID.randomUUID().toString(),
             imageUrl = imageUrl,
             userId = currentUser.id
@@ -53,7 +53,7 @@ class LocalRepository @Inject constructor() {
 
     fun addCaption(postId: String, text: String) {
         val currentUser = _currentUser.value ?: return
-        val caption = Caption(
+        val caption = CaptionEntity(
             id = UUID.randomUUID().toString(),
             text = text,
             userId = currentUser.id
@@ -94,7 +94,7 @@ class LocalRepository @Inject constructor() {
         }
     }
 
-    fun searchUsers(query: String): List<User> {
+    fun searchUsers(query: String): List<UserEntity> {
         return _users.value.filter { 
             it.username.contains(query, ignoreCase = true) 
         }
@@ -132,7 +132,12 @@ class LocalRepository @Inject constructor() {
         }}
     }
 
-    fun getUserPosts(userId: String): List<Post> {
+    fun getUserPosts(userId: String): List<PostEntity> {
         return _posts.value.filter { it.userId == userId }
     }
+
+    fun updateUser(user: UserEntity) {
+
+    }
+
 } 

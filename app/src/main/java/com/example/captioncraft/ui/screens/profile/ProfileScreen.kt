@@ -1,6 +1,10 @@
 package com.example.captioncraft.ui.screens.profile
 
-import androidx.annotation.StringRes
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -12,19 +16,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.example.captioncraft.R
-import com.example.captioncraft.data.models.Post
+import com.example.captioncraft.data.local.entity.PostEntity
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.compose.ui.draw.clip
 import androidx.navigation.NavHostController
-import com.example.captioncraft.ui.Screen
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
@@ -32,23 +37,22 @@ fun ProfileScreen(
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val userPosts by viewModel.userPosts.collectAsState()
+    val imageUri by viewModel.editImageUri.collectAsState()
+    val editedUsername by viewModel.editedUsername.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
+    var isEditing by remember { mutableStateOf(false) }
 
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri -> viewModel.onImagePicked(uri) }
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = currentUser?.username ?: "Username",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text(text = currentUser?.username ?: "", style = MaterialTheme.typography.titleMedium)
             Row {
                 IconButton(onClick = { viewModel.navigateToSettings(navController) }) {
                     Icon(Icons.Default.Settings, contentDescription = "Settings")
@@ -61,19 +65,21 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(80.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceVariant
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .clickable(enabled = isEditing) {
+                        if (isEditing) imagePickerLauncher.launch("image/*")
+                    }
+                    .border(width = 4.dp, color = MaterialTheme.colorScheme.primaryContainer, shape = CircleShape)
             ) {
-                currentUser?.avatarUrl?.let { url ->
-                    AsyncImage(
-                        model = url,
-                        contentDescription = "Profile Picture",
+                val displayImage = imageUri ?: currentUser?.avatarUrl?.let { Uri.parse(it) }
+                displayImage?.let {
+                    GlideImage(
+                        model = it,
+                        contentDescription = "Profile Image",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -83,12 +89,20 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column {
-                Text(
-                    text = currentUser?.username ?: "Username",
-                    style = MaterialTheme.typography.titleLarge
-                )
+                if (isEditing) {
+                    OutlinedTextField(
+                        value = editedUsername,
+                        onValueChange = viewModel::onUsernameChanged,
+                        label = { Text("Username") },
+                        singleLine = true
+                    )
+                } else {
+                    Text(text = currentUser?.username ?: "", style = MaterialTheme.typography.titleLarge)
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     ProfileStat("Posts", userPosts.size)
                     ProfileStat("Followers", currentUser?.followers?.size ?: 0)
                     ProfileStat("Following", currentUser?.following?.size ?: 0)
@@ -99,23 +113,24 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { /* TODO: Navigate to Edit Profile */ },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
+            onClick = {
+                if (isEditing) viewModel.updateProfile()
+                else viewModel.enterEditMode()
+                isEditing = !isEditing
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(Icons.Default.Edit, contentDescription = "Edit")
+            Icon(
+                imageVector = if (isEditing) Icons.Default.Check else Icons.Default.Edit,
+                contentDescription = null
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Edit Profile")
+            Text(if (isEditing) "Save Changes" else "Edit Profile")
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "My Posts",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        Text("My Posts", style = MaterialTheme.typography.titleMedium)
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -124,12 +139,11 @@ fun ProfileScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            items(userPosts) { post ->
-                PostThumbnail(post)
-            }
+            items(userPosts) { post -> PostThumbnail(post) }
         }
     }
 }
+
 
 
 @Composable
@@ -141,7 +155,7 @@ fun ProfileStat(label: String, count: Int) {
 }
 
 @Composable
-fun PostThumbnail(post: Post) {
+fun PostThumbnail(post: PostEntity) {
     Surface(
         modifier = Modifier
             .aspectRatio(1f)

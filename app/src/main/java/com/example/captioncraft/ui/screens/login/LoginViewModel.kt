@@ -4,14 +4,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.captioncraft.data.repository.UserRepository
+import com.example.captioncraft.domain.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor() : ViewModel() {
+class LoginViewModel @Inject constructor(
+    private val userRepository: UserRepository
+) : ViewModel() {
 
     var username by mutableStateOf("")
         private set
@@ -21,6 +27,9 @@ class LoginViewModel @Inject constructor() : ViewModel() {
 
     private val _loginStatus = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val loginStatus: StateFlow<LoginUiState> = _loginStatus.asStateFlow()
+
+    private val _registerResult = MutableStateFlow<Result<User>?>(null)
+    val registerResult: StateFlow<Result<User>?> = _registerResult
 
     fun onUsernameChanged(newValue: String) {
         username = newValue
@@ -34,11 +43,20 @@ class LoginViewModel @Inject constructor() : ViewModel() {
         if (username == "admin" && password == "admin") {
             _loginStatus.value = LoginUiState.Success
         } else {
-            _loginStatus.value = LoginUiState.Error("Invalid credentials")
+            viewModelScope.launch {
+                if(userRepository.login(username, password)) {
+                    _loginStatus.value = LoginUiState.Success
+                } else {
+                    _loginStatus.value = LoginUiState.Error("Invalid username or password.")
+                }
+            }
         }
     }
 
     fun register() {
-
+        viewModelScope.launch {
+            val result = userRepository.register(username, password)
+            _registerResult.value = result
+        }
     }
 }

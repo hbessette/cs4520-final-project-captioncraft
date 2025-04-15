@@ -12,7 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.captioncraft.R
-import com.example.captioncraft.data.models.User
+import com.example.captioncraft.data.local.entity.UserEntity
 import androidx.compose.foundation.shape.CircleShape
 
 @Composable
@@ -52,7 +52,7 @@ fun SearchScreen(
 
 @Composable
 fun UserListItem(
-    user: User,
+    user: UserEntity,
     onFollowClick: () -> Unit
 ) {
     ListItem(

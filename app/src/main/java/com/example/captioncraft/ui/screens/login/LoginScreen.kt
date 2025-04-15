@@ -39,6 +39,7 @@ fun LoginScreen(
     val username = viewModel.username
     val password = viewModel.password
     val loginStatus by viewModel.loginStatus.collectAsState()
+    val registerResult by viewModel.registerResult.collectAsState()
 
     LaunchedEffect(loginStatus) {
         if (loginStatus == LoginUiState.Success) {
@@ -48,6 +49,14 @@ fun LoginScreen(
                 }
                 launchSingleTop = true
                 restoreState = true
+            }
+        }
+    }
+
+    LaunchedEffect(registerResult) {
+        if (registerResult?.isSuccess == true) {
+            navController.navigate(Screen.Feed.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
             }
         }
     }

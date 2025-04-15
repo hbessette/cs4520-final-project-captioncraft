@@ -13,8 +13,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun SettingsScreen() {
-    val viewModel: SettingsViewModel = hiltViewModel()
+fun SettingsScreen(
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
     val isDarkTheme by viewModel.isDarkMode.collectAsState()
     val isNotificationsEnabled by viewModel.isNotificationsEnabled.collectAsState()
     val isPrivateModeEnabled by viewModel.isPrivateModeEnabled.collectAsState()

@@ -2,7 +2,7 @@ package com.example.captioncraft.ui.screens.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.captioncraft.data.models.User
+import com.example.captioncraft.data.local.entity.UserEntity
 import com.example.captioncraft.data.repository.LocalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -16,7 +16,7 @@ class SearchViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    val searchResults: StateFlow<List<User>> = searchQuery
+    val searchResults: StateFlow<List<UserEntity>> = searchQuery
         .debounce(300)
         .map { query ->
             if (query.isBlank()) {
