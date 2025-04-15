@@ -4,6 +4,7 @@ import com.example.captioncraft.data.local.dao.FollowDao
 import com.example.captioncraft.data.local.dao.PostDao
 import com.example.captioncraft.data.remote.api.PostApi
 import com.example.captioncraft.domain.mapper.toDomain
+import com.example.captioncraft.domain.mapper.toEntity
 import com.example.captioncraft.domain.model.Post
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
@@ -16,20 +17,36 @@ class PostRepository @Inject constructor(
     private val followDao: FollowDao,
     private val postApi: PostApi
 ){
-    fun getFeedPosts(currentUserId : Int) : Flow<List<Post>> = flow {
-        val followingIds = followDao.getFollowingIds(currentUserId)
-        emitAll(
-            postDao.getPostsByUsers(followingIds)
-                .map { list -> list.map { it.toDomain() } }
-        )
+    fun observeFeedPosts(currentUserId: Int): Flow<List<Post>> =
+        postDao.getFeedPosts(currentUserId).map { list -> list.map { it.toDomain() } }
+
+    suspend fun syncFeedPosts(currentUserId: Int) {
+        try {
+            val apiPosts = postApi.getFeedPosts(currentUserId).map { it.toDomain() }
+            val localPosts = postDao.getAllFeedPostsOnce(currentUserId)
+
+            if (apiPosts != localPosts) {
+                postDao.replaceAllFeedPosts(currentUserId, apiPosts.map { it.toEntity() })
+            }
+        } catch (_: Exception) {
+
+        }
     }
 
-    fun addCaption(postId: String, text: String) {
+    fun observeUserPosts(userId: Int): Flow<List<Post>> =
+        postDao.getUserPosts(userId).map { it.map { entity -> entity.toDomain() } }
 
-    }
+    suspend fun syncUserPosts(userId: Int) {
+        try {
+            val remote = postApi.getPostsByUser(userId).map { it.toDomain() }
+            val local = postDao.getUserPostsOnce(userId).map { it.toDomain() }
 
-    fun toggleCaptionLike(postId: String, captionId: String) {
+            if (remote != local) {
+                postDao.replaceUserPosts(userId, remote.map { it.toEntity() })
+            }
+        } catch (_: Exception) {
 
+        }
     }
 
 }

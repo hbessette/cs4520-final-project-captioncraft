@@ -13,4 +13,5 @@ fun Post.toEntity() = PostEntity(
     id, userId, image, caption, createdAt, likes, topCaptionId
 )
 
-fun PostEntity.toDomain() = Post(id, userId, image, caption, createdAt, likes, topCaptionId)
+fun PostEntity.toDomain() = Post(id, userId, image, caption, createdAt, likes, topCaptionId
+)

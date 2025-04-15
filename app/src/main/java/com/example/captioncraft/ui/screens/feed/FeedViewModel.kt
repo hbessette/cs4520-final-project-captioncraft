@@ -11,8 +11,10 @@ import com.example.captioncraft.domain.model.Post
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -29,12 +31,21 @@ class FeedViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val feedPosts: StateFlow<List<Post>> = userRepository.currentUser
         .filterNotNull()
-        .flatMapLatest { postRepository.getFeedPosts(it.id) }
+        .flatMapLatest { postRepository.observeFeedPosts(it.id) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    private val _captions = MutableStateFlow<List<Caption>>(emptyList())
+    val captions: StateFlow<List<Caption>> = _captions.asStateFlow()
+
+    fun syncFeedPosts() {
+        viewModelScope.launch {
+            userRepository.currentUser.value?.let { postRepository.syncFeedPosts(it.id) }
+        }
+    }
 
     fun addCaption(postId: Int, text: String) {
         viewModelScope.launch {
@@ -50,5 +61,11 @@ class FeedViewModel @Inject constructor(
         }
     }
 
-    fun getCaptions(postId: Int): Flow<List<Caption>> = captionRepository.getCaptionsForPost(postId)
+    fun loadCaptions(postId: Int) {
+        viewModelScope.launch {
+            captionRepository.getCaptionsForPost(postId).collect { list ->
+                _captions.value = list
+            }
+        }
+    }
 } 

@@ -23,4 +23,7 @@ interface SettingsDao {
 
     @Query("DELETE FROM settings WHERE id = :userId")
     suspend fun deleteByUserId(userId: Int)
+
+    @Query("SELECT * FROM settings WHERE id = :userId")
+    suspend fun getSettingsByUserIdOnce(userId: Int): SettingsEntity?
 }

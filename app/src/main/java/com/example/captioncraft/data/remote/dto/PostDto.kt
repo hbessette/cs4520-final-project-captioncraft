@@ -7,5 +7,5 @@ data class PostDto(
     val caption: String?,
     val created_at: String,
     val likes: Int,
-    val topCaptionId: Int?
+    val topCaptionId: Int?,
 )

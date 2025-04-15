@@ -9,5 +9,5 @@ data class Post(
     val caption: String?,
     val createdAt: Date,
     val likes: Int,
-    val topCaptionId: Int?
+    val topCaptionId: Int?,
 )

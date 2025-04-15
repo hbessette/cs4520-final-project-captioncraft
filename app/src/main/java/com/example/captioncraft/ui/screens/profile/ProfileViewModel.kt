@@ -12,9 +12,13 @@ import com.example.captioncraft.data.repository.FollowRepository
 import com.example.captioncraft.data.repository.LocalRepository
 import com.example.captioncraft.data.repository.PostRepository
 import com.example.captioncraft.data.repository.UserRepository
+import com.example.captioncraft.domain.model.Post
+import com.example.captioncraft.domain.model.User
 import com.example.captioncraft.ui.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,10 +28,12 @@ class ProfileViewModel @Inject constructor(
     private val postRepository: PostRepository
 ) : ViewModel() {
 
-    val currentUser: StateFlow<UserEntity?> = repository.currentUser
+    val currentUser: StateFlow<User?> = userRepository.currentUser
 
-    val userPosts: StateFlow<List<PostEntity>> = currentUser
-        .map { user -> user?.let { repository.getUserPosts(it.id) } ?: emptyList() }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val userPosts: StateFlow<List<Post>> = userRepository.currentUser
+        .filterNotNull()
+        .flatMapLatest { postRepository.observeUserPosts(it.id) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -64,7 +70,9 @@ class ProfileViewModel @Inject constructor(
             avatarUrl = updatedImageUrl ?: current.avatarUrl
         )
 
-        repository.updateUser(updatedUser)
+        viewModelScope.launch {
+            userRepository.updateUser(updatedUser)
+        }
 
         _editImageUri.value = null
         _editedUsername.value = ""
@@ -78,7 +86,7 @@ class ProfileViewModel @Inject constructor(
             launchSingleTop = true
             restoreState = true
         }
-        repository.logout()
+        userRepository.logout()
     }
 
     fun navigateToSettings(navController: NavHostController) {

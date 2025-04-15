@@ -7,6 +7,7 @@ import com.example.captioncraft.domain.mapper.toDomain
 import com.example.captioncraft.domain.mapper.toEntity
 import com.example.captioncraft.domain.model.Caption
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import java.util.Date
@@ -17,8 +18,21 @@ class CaptionRepository @Inject constructor(
     private val captionApi: CaptionApi
 ) {
     fun getCaptionsForPost(postId: Int): Flow<List<Caption>> = flow {
-        captionDao.getCaptionsByPost(postId).map { list -> list.map { it.toDomain() } }
+        try {
+            val remoteCaptions = captionApi.getCaptions(postId).map { it.toDomain() }
+            val localCaptions = captionDao.getCaptionsByPostOnce(postId).map { it.toDomain() }
+
+            if (remoteCaptions != localCaptions) {
+                captionDao.deleteCaptionsByPost(postId)
+                captionDao.insertCaptions(remoteCaptions.map { it.toEntity() })
+            }
+        } catch (_: Exception) { }
+
+        emitAll(
+            captionDao.getCaptionsByPost(postId).map { list -> list.map { it.toDomain() } }
+        )
     }
+
 
     suspend fun addCaption(postId: Int, userId: Int, text: String) : Result<Caption> {
         val caption = CaptionCreateDto(

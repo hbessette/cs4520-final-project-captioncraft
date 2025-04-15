@@ -22,5 +22,8 @@ interface UserApi {
     suspend fun register(@Body request: RegisterDto): UserDto
 
     @POST("users/login")
-    suspend fun authenticate(@Body request: RegisterDto): UserDto?
+    suspend fun authenticate(@Body request: RegisterDto): UserDto
+
+    @GET("users/search")
+    suspend fun searchUsers(@Query("query") query: String): List<UserDto>
 }

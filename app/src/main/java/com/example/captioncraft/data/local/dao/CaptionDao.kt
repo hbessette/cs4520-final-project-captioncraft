@@ -23,4 +23,14 @@ interface CaptionDao {
 
     @Delete
     suspend fun deleteCaption(caption: CaptionEntity)
+
+    @Query("SELECT * FROM Caption WHERE postId = :postId ORDER BY createdAt ASC")
+    suspend fun getCaptionsByPostOnce(postId: Int): List<CaptionEntity>
+
+    @Query("DELETE FROM Caption WHERE postId = :postId")
+    suspend fun deleteCaptionsByPost(postId: Int)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCaptions(captions: List<CaptionEntity>)
+
 }

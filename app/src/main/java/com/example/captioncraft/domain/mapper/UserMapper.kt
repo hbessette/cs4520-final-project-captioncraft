@@ -27,6 +27,16 @@ fun User.toEntity(): UserEntity = UserEntity(
     username = username,
     name = name,
     profilePicture = avatarUrl,
-    createdAt = createdAt
+    createdAt = createdAt,
+    password = ""
+)
+
+fun User.toDto(): UserDto = UserDto(
+    id = id,
+    username = username,
+    name = name,
+    profilePicture = avatarUrl,
+    created_at = formatToIsoString(createdAt),
+    password = ""
 )
 

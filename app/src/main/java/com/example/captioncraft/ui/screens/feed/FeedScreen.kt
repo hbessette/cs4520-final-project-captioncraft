@@ -11,12 +11,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.captioncraft.R
 import com.example.captioncraft.data.local.entity.CaptionEntity
+import com.example.captioncraft.domain.model.Caption
 import com.example.captioncraft.domain.model.Post
 
 @Composable
@@ -24,6 +29,18 @@ fun FeedScreen(
     viewModel: FeedViewModel = hiltViewModel()
 ) {
     val posts by viewModel.feedPosts.collectAsState()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(Unit) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.syncFeedPosts()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -34,7 +51,7 @@ fun FeedScreen(
             PostCard(
                 post = post,
                 onAddCaption = { text -> viewModel.addCaption(post.id, text) },
-                onLikeCaption = { captionId -> viewModel.toggleCaptionLike(post.id, captionId) }
+                onLikeCaption = { captionId -> viewModel.toggleLike(captionId.toInt()) }
             )
         }
     }
@@ -44,11 +61,16 @@ fun FeedScreen(
 fun PostCard(
     post: Post,
     onAddCaption: (String) -> Unit,
-    onLikeCaption: (String) -> Unit
+    onLikeCaption: (String) -> Unit,
+    viewModel: FeedViewModel = hiltViewModel()
 ) {
     var showAddCaption by remember { mutableStateOf(false) }
     var captionText by remember { mutableStateOf("") }
+    val captions by viewModel.captions.collectAsState()
 
+    LaunchedEffect(post.id) {
+        viewModel.loadCaptions(post.id)
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -61,7 +83,7 @@ fun PostCard(
         ) {
             // Post image
             AsyncImage(
-                model = post.imageUrl,
+                model = post.image,
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -69,8 +91,7 @@ fun PostCard(
                 contentScale = ContentScale.Crop
             )
 
-            // Most liked caption
-            post.captions.maxByOrNull { it.likes.size }?.let { topCaption ->
+            captions.maxByOrNull { it.likes }?.let { topCaption ->
                 Text(
                     text = topCaption.text,
                     style = MaterialTheme.typography.bodyLarge
@@ -78,10 +99,10 @@ fun PostCard(
             }
 
             // Caption list
-            post.captions.forEach { caption ->
+            captions.forEach { caption ->
                 CaptionItem(
                     caption = caption,
-                    onLike = { onLikeCaption(caption.id) }
+                    onLike = { onLikeCaption(caption.id.toString()) }
                 )
             }
 
@@ -121,7 +142,7 @@ fun PostCard(
 
 @Composable
 fun CaptionItem(
-    caption: CaptionEntity,
+    caption: Caption,
     onLike: () -> Unit
 ) {
     Row(
@@ -139,7 +160,7 @@ fun CaptionItem(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = caption.likes.size.toString(),
+                text = caption.likes.toString(),
                 style = MaterialTheme.typography.labelMedium
             )
             IconButton(onClick = onLike) {

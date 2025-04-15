@@ -14,3 +14,13 @@ fun parseIsoDate(dateString: String): Date? {
         null
     }
 }
+
+fun formatToIsoString(date: Date?) : String {
+    val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+    formatter.timeZone = TimeZone.getTimeZone("UTC")
+    if (date != null) {
+        return formatter.format(date)
+    } else {
+        return formatter.format(Date())
+    }
+}

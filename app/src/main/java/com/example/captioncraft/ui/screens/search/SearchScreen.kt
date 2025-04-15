@@ -75,10 +75,3 @@ fun UserListItem(
         }
     )
 }
-
-// This is a placeholder data class - we'll implement the actual data model later
-data class User(
-    val id: String,
-    val username: String,
-    val avatarUrl: String?
-) 
