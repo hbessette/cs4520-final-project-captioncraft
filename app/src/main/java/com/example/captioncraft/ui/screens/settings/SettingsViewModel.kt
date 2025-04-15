@@ -61,7 +61,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun update() {
+    private fun update() {
         val userSettings = userRepository.currentUser.value?.let {
             UserSettings(
                 id = it.id,

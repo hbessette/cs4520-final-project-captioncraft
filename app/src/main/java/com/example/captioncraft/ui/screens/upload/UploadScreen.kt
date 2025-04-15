@@ -46,7 +46,7 @@ fun UploadScreen(
 
             Button(
                 onClick = {
-                    // TODO: Handle image upload
+                    viewModel.uploadImage(selectedImageUri)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

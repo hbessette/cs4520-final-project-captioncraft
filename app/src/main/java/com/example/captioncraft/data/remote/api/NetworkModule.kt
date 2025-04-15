@@ -26,5 +26,21 @@ object NetworkModule {
     @Provides
     fun provideUserApi(retrofit: Retrofit): UserApi =
         retrofit.create(UserApi::class.java)
+
+    @Provides
+    fun provideFollowApi(retrofit: Retrofit): FollowApi =
+        retrofit.create(FollowApi::class.java)
+
+    @Provides
+    fun providePostApi(retrofit: Retrofit): PostApi =
+        retrofit.create(PostApi::class.java)
+
+    @Provides
+    fun provideSettingsApi(retrofit: Retrofit): SettingsApi =
+        retrofit.create(SettingsApi::class.java)
+
+    @Provides
+    fun providesCaptionApi(retrofit: Retrofit): CaptionApi =
+        retrofit.create(CaptionApi::class.java)
 }
 

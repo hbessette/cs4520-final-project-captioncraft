@@ -28,4 +28,7 @@ interface FollowDao {
 
     @Query("SELECT followeeId FROM Follow WHERE followerId = :userId")
     suspend fun getFollowingIds(userId: Int): List<Int>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM Follow WHERE followerId = :currentUserId AND followeeId = :targetUserId)")
+    fun isFollowingOnce(currentUserId: Int, targetUserId: Int): Boolean
 }

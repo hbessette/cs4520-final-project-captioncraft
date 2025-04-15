@@ -9,7 +9,6 @@ import com.example.captioncraft.data.local.entity.PostEntity
 import com.example.captioncraft.data.local.entity.UserEntity
 import com.example.captioncraft.data.repository.CaptionRepository
 import com.example.captioncraft.data.repository.FollowRepository
-import com.example.captioncraft.data.repository.LocalRepository
 import com.example.captioncraft.data.repository.PostRepository
 import com.example.captioncraft.data.repository.UserRepository
 import com.example.captioncraft.domain.model.Post
@@ -29,7 +28,7 @@ class ProfileViewModel @Inject constructor(
 ) : ViewModel() {
 
     val currentUser: StateFlow<User?> = userRepository.currentUser
-
+    val userId = currentUser.value!!.id
     @OptIn(ExperimentalCoroutinesApi::class)
     val userPosts: StateFlow<List<Post>> = userRepository.currentUser
         .filterNotNull()
@@ -96,6 +95,27 @@ class ProfileViewModel @Inject constructor(
             }
             launchSingleTop = true
             restoreState = true
+        }
+    }
+
+    fun syncUserPosts() {
+        viewModelScope.launch {
+            userRepository.currentUser.value?.let { postRepository.syncUserPosts(it.id) }
+        }
+    }
+
+    fun followerCount(): StateFlow<Int> =
+        followRepository.getFollowerCount(userId)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    fun followingCount(): StateFlow<Int> =
+        followRepository.getFollowingCount(userId)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    fun syncFollowData() {
+        viewModelScope.launch {
+            followRepository.syncFollowers(userId)
+            followRepository.syncFollowing(userId)
         }
     }
 }

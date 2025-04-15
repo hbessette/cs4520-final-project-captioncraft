@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.navigation.NavHostController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.example.captioncraft.domain.model.Post
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -39,12 +40,18 @@ fun ProfileScreen(
     val userPosts by viewModel.userPosts.collectAsState()
     val imageUri by viewModel.editImageUri.collectAsState()
     val editedUsername by viewModel.editedUsername.collectAsState()
-
+    val followers by viewModel.followerCount().collectAsState()
+    val following by viewModel.followingCount().collectAsState()
     var isEditing by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri -> viewModel.onImagePicked(uri) }
+
+    LaunchedEffect(viewModel){
+        viewModel.syncUserPosts()
+        viewModel.syncFollowData()
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(
@@ -104,8 +111,8 @@ fun ProfileScreen(
 
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     ProfileStat("Posts", userPosts.size)
-                    ProfileStat("Followers", currentUser?.followers?.size ?: 0)
-                    ProfileStat("Following", currentUser?.following?.size ?: 0)
+                    ProfileStat("Followers", followers)
+                    ProfileStat("Following", following)
                 }
             }
         }
@@ -155,7 +162,7 @@ fun ProfileStat(label: String, count: Int) {
 }
 
 @Composable
-fun PostThumbnail(post: PostEntity) {
+fun PostThumbnail(post: Post) {
     Surface(
         modifier = Modifier
             .aspectRatio(1f)
@@ -163,7 +170,7 @@ fun PostThumbnail(post: PostEntity) {
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         AsyncImage(
-            model = post.imageUrl,
+            model = post.image,
             contentDescription = "Post Thumbnail",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()

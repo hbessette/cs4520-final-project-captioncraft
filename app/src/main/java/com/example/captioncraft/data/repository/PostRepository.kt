@@ -4,6 +4,7 @@ import com.example.captioncraft.data.local.dao.FollowDao
 import com.example.captioncraft.data.local.dao.PostDao
 import com.example.captioncraft.data.remote.api.PostApi
 import com.example.captioncraft.domain.mapper.toDomain
+import com.example.captioncraft.domain.mapper.toDto
 import com.example.captioncraft.domain.mapper.toEntity
 import com.example.captioncraft.domain.model.Post
 import kotlinx.coroutines.flow.Flow
@@ -49,4 +50,16 @@ class PostRepository @Inject constructor(
         }
     }
 
+    suspend fun uploadPost(post: Post): Result<Post> {
+        return try {
+            val response = postApi.uploadPost(post.toDto())
+            val domainPost = response.toDomain()
+
+            postDao.insertPosts(listOf(domainPost.toEntity()))
+
+            Result.success(domainPost)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

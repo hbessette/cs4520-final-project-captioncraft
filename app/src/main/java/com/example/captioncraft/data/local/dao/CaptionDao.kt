@@ -2,6 +2,7 @@ package com.example.captioncraft.data.local.dao
 import androidx.room.*
 import com.example.captioncraft.data.local.entity.CaptionEntity
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 @Dao
 interface CaptionDao {
